@@ -15,6 +15,9 @@ phpunit.xml
 # Build artifacts
 build/
 
+# Smarty compiled templates
+templates_c/
+
 # PHPUnit result cache
 .phpunit.result.cache
 .phpunit.cache/

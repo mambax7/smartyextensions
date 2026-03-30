@@ -183,7 +183,7 @@ final class FormExtension extends AbstractExtension
             $value = $data[$field] ?? '';
             foreach ($fieldRules as $rule => $ruleValue) {
                 match ($rule) {
-                    'required' => $ruleValue && ($value === '' || $value === null)
+                    'required' => $ruleValue && $value === ''
                         ? $errors[$field][] = 'This field is required'
                         : null,
                     'min_length' => \is_string($value) && \strlen($value) < (int) $ruleValue

@@ -114,6 +114,6 @@ final class TextExtension extends AbstractExtension
     {
         \preg_match_all('/#([\w]+)/u', $text, $matches);
 
-        return $matches[1] ?? [];
+        return $matches[1];
     }
 }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Xoops\SmartyExtensions\Adapter;
 
+use Smarty\BlockHandler\BlockHandlerInterface;
+use Smarty\FunctionHandler\FunctionHandlerInterface;
+use Smarty\Template;
 use Xoops\SmartyExtensions\AbstractExtension;
 
 /**
@@ -40,13 +43,59 @@ final class Smarty5Adapter extends \Smarty\Extension\Base
         return $this->modifiers[$modifier] ?? null;
     }
 
-    public function getFunctionHandler(string $name): ?callable
+    public function getFunctionHandler(string $name): ?FunctionHandlerInterface
     {
-        return $this->functions[$name] ?? null;
+        $callback = $this->functions[$name] ?? null;
+        if ($callback === null) {
+            return null;
+        }
+
+        return new class ($callback) implements FunctionHandlerInterface {
+            /** @var \Closure */
+            private readonly \Closure $callback;
+
+            public function __construct(callable $callback)
+            {
+                $this->callback = $callback(...);
+            }
+
+            public function handle($params, Template $template): mixed
+            {
+                return ($this->callback)($params, $template);
+            }
+
+            public function isCacheable(): bool
+            {
+                return false;
+            }
+        };
     }
 
-    public function getBlockHandler(string $name): ?callable
+    public function getBlockHandler(string $name): ?BlockHandlerInterface
     {
-        return $this->blocks[$name] ?? null;
+        $callback = $this->blocks[$name] ?? null;
+        if ($callback === null) {
+            return null;
+        }
+
+        return new class ($callback) implements BlockHandlerInterface {
+            /** @var \Closure */
+            private readonly \Closure $callback;
+
+            public function __construct(callable $callback)
+            {
+                $this->callback = $callback(...);
+            }
+
+            public function handle($params, $content, Template $template, &$repeat): mixed
+            {
+                return ($this->callback)($params, $content, $template, $repeat);
+            }
+
+            public function isCacheable(): bool
+            {
+                return false;
+            }
+        };
     }
 }
