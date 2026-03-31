@@ -57,7 +57,7 @@ final class DataExtension extends AbstractExtension
 
         $output = \fopen('php://temp', 'r+');
         foreach ($array as $row) {
-            \fputcsv($output, (array) $row, $separator);
+            \fputcsv($output, (array) $row, $separator, '"', '\\');
         }
         \rewind($output);
         $result = \stream_get_contents($output);
@@ -85,13 +85,14 @@ final class DataExtension extends AbstractExtension
         }
 
         // Enforce web root boundary: only allow files under XOOPS_ROOT_PATH
-        // or the document root when running outside XOOPS
+        // or the document root. Fail closed if neither is available.
         $webRoot = \defined('XOOPS_ROOT_PATH') ? (string) \constant('XOOPS_ROOT_PATH') : ($_SERVER['DOCUMENT_ROOT'] ?? '');
-        if ($webRoot !== '') {
-            $resolvedRoot = \realpath($webRoot);
-            if ($resolvedRoot === false || !\str_starts_with($realPath, $resolvedRoot . \DIRECTORY_SEPARATOR)) {
-                return '';
-            }
+        if ($webRoot === '') {
+            return '';
+        }
+        $resolvedRoot = \realpath($webRoot);
+        if ($resolvedRoot === false || !\str_starts_with($realPath, $resolvedRoot . \DIRECTORY_SEPARATOR)) {
+            return '';
         }
 
         $result = \base64_encode(\file_get_contents($realPath));

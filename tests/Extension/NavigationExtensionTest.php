@@ -137,7 +137,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function generateUrlBuildsUrlWithParams(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->generateUrl(
             ['route' => 'modules/news/article.php', 'params' => ['id' => '5']],
             $tpl,
@@ -148,7 +148,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function generateUrlEncodesQueryParams(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->generateUrl(
             ['route' => 'search.php', 'params' => ['q' => 'a&b']],
             $tpl,
@@ -159,7 +159,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function generateUrlAssignsToTemplateVariable(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $tpl->expects($this->once())->method('assign')->with('myUrl', $this->isType('string'));
 
         $result = $this->ext->generateUrl(
@@ -174,7 +174,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderAlertOutputsBootstrapAlert(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->renderAlert(
             ['message' => 'Saved!', 'type' => 'success'],
             $tpl,
@@ -186,14 +186,14 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderAlertReturnsEmptyForEmptyMessage(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->renderAlert(['message' => ''], $tpl));
     }
 
     #[Test]
     public function renderAlertDismissibleIncludesCloseButton(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->renderAlert(
             ['message' => 'Error!', 'type' => 'danger', 'dismissible' => true],
             $tpl,
@@ -207,7 +207,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderBreadcrumbsOutputsBootstrapNav(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->renderBreadcrumbs(
             ['items' => ['/home' => 'Home', '' => 'Current']],
             $tpl,
@@ -220,7 +220,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderBreadcrumbsReturnsEmptyForNoItems(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->renderBreadcrumbs(['items' => []], $tpl));
     }
 
@@ -229,7 +229,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderPaginationOutputsBootstrapPagination(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->renderPagination(
             ['totalPages' => 5, 'currentPage' => 2, 'urlPattern' => '?page={page}'],
             $tpl,
@@ -243,7 +243,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderPaginationReturnsEmptyForSinglePage(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->renderPagination(['totalPages' => 1], $tpl));
     }
 
@@ -252,7 +252,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderQrCodeOutputsImgTag(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->renderQrCode(
             ['text' => 'https://xoops.org', 'size' => 200],
             $tpl,
@@ -265,7 +265,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function renderQrCodeReturnsEmptyForEmptyText(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->renderQrCode(['text' => ''], $tpl));
     }
 
@@ -274,7 +274,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function socialShareSinglePlatformReturnsLink(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->socialShare(
             ['url' => 'https://xoops.org', 'title' => 'XOOPS', 'platform' => 'twitter'],
             $tpl,
@@ -285,7 +285,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function socialShareNoPlatformReturnsFullBar(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->socialShare(
             ['url' => 'https://xoops.org', 'title' => 'XOOPS'],
             $tpl,
@@ -299,7 +299,7 @@ final class NavigationExtensionTest extends TestCase
     #[Test]
     public function socialShareReturnsEmptyForEmptyUrl(): void
     {
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->socialShare(['url' => ''], $tpl));
     }
 
@@ -309,7 +309,7 @@ final class NavigationExtensionTest extends TestCase
     public function generateCanonicalUrlReturnsEmptyWithoutXoopsUrl(): void
     {
         // Without XOOPS_URL defined, refuses to use HTTP_HOST (host-header poisoning)
-        $tpl = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $tpl = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
 
         $result = $this->ext->generateCanonicalUrl(['path' => 'news/'], $tpl);
 

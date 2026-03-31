@@ -380,12 +380,10 @@ final class SecurityExtensionTest extends TestCase
     // ──────────────────────────────────────────────
 
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject&object
+     * @return \PHPUnit\Framework\MockObject\MockObject&\Xoops\SmartyExtensions\Test\Stubs\TemplateStub
      */
     private function createTemplateMock(): object
     {
-        return $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['assign'])
-            ->getMock();
+        return $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
     }
 }

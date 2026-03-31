@@ -268,9 +268,7 @@ final class RayDebugExtensionTest extends TestCase
      */
     private function createTemplateMock(): object
     {
-        return $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['assign', 'getTemplateVars'])
-            ->getMock();
+        return $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
     }
 
     private function callPrivate(string $method, array $args): mixed

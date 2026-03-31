@@ -178,7 +178,7 @@ final class FormatExtensionTest extends TestCase
     #[Test]
     public function datetimeDiffCalculatesDifference(): void
     {
-        $template = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $template = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->datetimeDiff(
             ['start' => '2024-01-01', 'end' => '2026-03-20'],
             $template,
@@ -189,14 +189,14 @@ final class FormatExtensionTest extends TestCase
     #[Test]
     public function datetimeDiffReturnsEmptyForMissingParams(): void
     {
-        $template = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $template = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $this->assertSame('', $this->ext->datetimeDiff([], $template));
     }
 
     #[Test]
     public function datetimeDiffAssignsToTemplate(): void
     {
-        $template = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $template = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $template->expects($this->once())
             ->method('assign')
             ->with('myVar', $this->isType('string'));
@@ -211,7 +211,7 @@ final class FormatExtensionTest extends TestCase
     #[Test]
     public function getCurrentYearReturnsCurrentYear(): void
     {
-        $template = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $template = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $result = $this->ext->getCurrentYear([], $template);
         $this->assertSame(\date('Y'), $result);
     }
@@ -219,7 +219,7 @@ final class FormatExtensionTest extends TestCase
     #[Test]
     public function getCurrentYearAssignsToTemplate(): void
     {
-        $template = $this->getMockBuilder(\stdClass::class)->addMethods(['assign'])->getMock();
+        $template = $this->createMock(\Xoops\SmartyExtensions\Test\Stubs\TemplateStub::class);
         $template->expects($this->once())
             ->method('assign')
             ->with('year', \date('Y'));

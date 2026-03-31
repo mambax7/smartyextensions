@@ -194,8 +194,8 @@ final class SecurityExtension extends AbstractExtension
         // Decode HTML entities so encoded colons/schemes cannot bypass checks
         $decoded = \html_entity_decode($sanitized, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-        // Only allow safe schemes
-        if (\preg_match('#^(https?|ftp|mailto)://#i', $decoded) || \str_starts_with($decoded, '/') || \str_starts_with($decoded, '#')) {
+        // Only allow safe schemes (mailto: uses : not ://)
+        if (\preg_match('#^(https?|ftp)://#i', $decoded) || \preg_match('#^mailto:#i', $decoded) || \str_starts_with($decoded, '/') || \str_starts_with($decoded, '#')) {
             return $decoded;
         }
 
