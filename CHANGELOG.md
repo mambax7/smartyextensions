@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-03-31
+
+### Security
+
+* **sanitize_url**: decode HTML entities before scheme check to block entity-encoded bypass (e.g. `javascript&#58;alert(1)`)
+* **sanitize_url**: split `mailto:` into its own regex branch so `mailto:user@example.com` is correctly allowed
+* **has_user_permission / xo_permission**: rewired to use injected `XoopsGroupPermHandler->checkRight()` instead of non-existent `XoopsUser->hasPermission()`; removed fake `hasPermission()` from test stubs
+* **base64_encode_file**: enforce `XOOPS_ROOT_PATH` / `DOCUMENT_ROOT` path boundary; fail closed when neither is set
+* **generate_canonical_url**: refuse to build URL from `HTTP_HOST` when `XOOPS_URL` is undefined — prevents host-header poisoning
+
+### Bug Fixes
+
+* **prettyPrintJson**: handle `json_encode()` returning `false` on invalid UTF-8 instead of crashing with TypeError
+* **relativeTime**: respect `DateInterval->invert` so future dates show "from now" instead of "ago"
+* **Smarty5Adapter**: return proper `FunctionHandlerInterface` / `BlockHandlerInterface` instead of raw callables — fixes covariance errors with Smarty 5
+
+### Changed
+
+* Package renamed from `xoops/smarty-extensions` to `xoops/smartyextensions` for consistency with namespace `Xoops\SmartyExtensions`
+* PHPStan lowered from level max to level 5 (level max is impractical for Smarty's untyped `array $params` convention)
+* `fputcsv()` call now passes explicit `escape` parameter to suppress PHP 8.4 deprecation
+
+### Infrastructure
+
+* Add PHPStan stubs for XOOPS classes, Smarty 4/5, Ray, and Debugbar RayLogger
+* Add `require-dev` (phpstan, phpunit, phpcs) and composer scripts (`test`, `analyse`, `lint`)
+* Fix `phpunit.xml.dist` test directory path (`./tests/unit` -> `./tests`) and bootstrap
+* Fix test bootstrap to work standalone (not just within `xoops_lib/vendor/`)
+* Fix `ExtensionRegistryTest` for Smarty 4/5 dual compatibility
+* Fix test stub `SmartyExtensionBaseStub` signatures to match Smarty 5 return types
+* Replace all `MockBuilder::addMethods()` calls with `TemplateStub` interface — eliminates 40 PHPUnit deprecations and forward-compatible with PHPUnit 12
+* Remove legacy `pr_tests0.yml` workflow (XMF leftover testing PHP 7.4/8.0/8.1)
+* Update `.coderabbit.yaml` from PHP 7.4 to PHP 8.2+
+* Update `sonar-project.properties` from XMF to smartyextensions
+* Remove stale `stubs/` and `phpstan-baseline.neon` references from `.gitattributes` and `.scrutinizer.yml`
+* Bump `shivammathur/setup-php` to 2.37.0, `actions/cache` to 5.0.4, `JetBrains/qodana-action` to 2025.3.2, `codecov/codecov-action` to 6.0.0
+
+### Documentation
+
+* Write comprehensive README with plugin reference tables and registration example
+* Write TUTORIAL.md with practical template examples for all extensions
+* Add quick start example, XOOPS dependency matrix, best practices, and troubleshooting sections
+* Document direct-output vs assign behavior, HTML-output warnings, and failure modes
+* Replace XMF changelog with smartyextensions-specific changelog
+
 ## [1.0.0] - 2026-03-30
 
 ### Initial Release
@@ -26,9 +71,9 @@ Extracted from XOOPS Core 2.5 (`htdocs/xoops_lib/vendor/xoops/smartyextensions/`
 
 * PSR-4 autoloading under `Xoops\SmartyExtensions\`
 * PHPUnit 11 test suite with full coverage
-* PHPStan level max static analysis
+* PHPStan static analysis
 * PHP_CodeSniffer PSR-12 enforcement
-* GitHub Actions CI matrix: PHP 8.2–8.5 with lowest-deps and coverage runs
+* GitHub Actions CI matrix: PHP 8.2-8.5 with lowest-deps and coverage runs
 * Codecov, SonarCloud, and Qodana integrations
 * Dependabot and Renovate for automated dependency updates
 * CodeRabbit AI code review configuration
