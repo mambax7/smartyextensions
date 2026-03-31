@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-03-31
+
+### New Features
+
+* **AssetExtension** — deduplicated CSS and JS inclusion for templates
+  - `require_css` / `require_js` queue assets by file path (last-write-wins for conflicting attributes)
+  - `flush_css` / `flush_js` output all queued `<link>`/`<script>` tags and clear the queue
+  - `assign` mode returns structured arrays with full metadata (file, media, defer, async)
+  - URL scheme allowlist: `http://`, `https://`, protocol-relative, and relative paths only
+  - Entity-encoded URLs are decoded before validation and stored decoded
+  - Colons in query strings (e.g., `asset.php?src=https://...`) are correctly allowed
+
 ## [1.0.1] - 2026-03-31
 
 ### Security

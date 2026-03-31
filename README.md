@@ -26,6 +26,7 @@ use Xoops\SmartyExtensions\Extension\DataExtension;
 use Xoops\SmartyExtensions\Extension\SecurityExtension;
 use Xoops\SmartyExtensions\Extension\FormExtension;
 use Xoops\SmartyExtensions\Extension\XoopsCoreExtension;
+use Xoops\SmartyExtensions\Extension\AssetExtension;
 
 $registry = new ExtensionRegistry();
 $registry->add(new TextExtension());
@@ -35,6 +36,7 @@ $registry->add(new DataExtension());
 $registry->add(new SecurityExtension($xoopsSecurity, $grouppermHandler));
 $registry->add(new FormExtension($xoopsSecurity));
 $registry->add(new XoopsCoreExtension());
+$registry->add(new AssetExtension());
 
 $registry->registerAll($smarty);
 ```
@@ -179,6 +181,19 @@ XOOPS-specific functions (config, users, modules, blocks).
 | `ray_context` | function | Dump all template variables to Ray |
 | `ray_dump` | function | Dump variable structure to Ray |
 | `ray_table` | function | Send array to Ray table display |
+
+### AssetExtension
+
+Deduplicated CSS and JS inclusion (pure PHP, no XOOPS dependencies).
+
+| Plugin | Type | Description |
+|--------|------|-------------|
+| `require_css` | function | Queue a stylesheet (deduplicated by file path, last-write-wins) |
+| `require_js` | function | Queue a script (deduplicated, supports `defer`/`async`) |
+| `flush_css` | function | Output all `<link>` tags and reset the queue |
+| `flush_js` | function | Output all `<script>` tags and reset the queue |
+
+Asset URLs are validated against a safe-scheme allowlist (`http://`, `https://`, `//`, relative paths). Unsafe schemes like `javascript:` and `data:` are silently rejected.
 
 ## Writing Custom Extensions
 

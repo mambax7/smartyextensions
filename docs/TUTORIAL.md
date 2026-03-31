@@ -16,6 +16,7 @@ For the full plugin reference table, see [README.md](../README.md).
 - [Forms](#forms)
 - [Security and Permissions](#security-and-permissions)
 - [XOOPS Core Helpers](#xoops-core-helpers)
+- [Asset Management](#asset-management)
 - [Ray Debugging](#ray-debugging)
 - [Writing Your Own Extension](#writing-your-own-extension)
 - [Best Practices](#best-practices)
@@ -39,6 +40,7 @@ use Xoops\SmartyExtensions\Extension\SecurityExtension;
 use Xoops\SmartyExtensions\Extension\FormExtension;
 use Xoops\SmartyExtensions\Extension\XoopsCoreExtension;
 use Xoops\SmartyExtensions\Extension\RayDebugExtension;
+use Xoops\SmartyExtensions\Extension\AssetExtension;
 
 $registry = new ExtensionRegistry();
 $registry->add(new TextExtension());
@@ -49,6 +51,7 @@ $registry->add(new SecurityExtension($xoopsSecurity, $grouppermHandler));
 $registry->add(new FormExtension($xoopsSecurity));
 $registry->add(new XoopsCoreExtension());
 $registry->add(new RayDebugExtension());
+$registry->add(new AssetExtension());
 
 $registry->registerAll($smarty);
 ```
@@ -92,6 +95,7 @@ Some extensions are pure PHP and work in any Smarty environment. Others require 
 | FormExtension | Optional | `XoopsSecurity` for CSRF injection; works without it (no token) |
 | SecurityExtension | Yes | `XoopsSecurity`, `XoopsGroupPermHandler`, `$xoopsUser` global |
 | XoopsCoreExtension | Yes | `$xoopsConfig`, `$xoopsUser`, `xoops_getHandler()`, `XOOPS_URL` |
+| AssetExtension | No | Pure PHP |
 | RayDebugExtension | Yes | Debugbar module with RayLogger enabled, `ray()` function |
 
 ### Plugin types
@@ -846,6 +850,65 @@ The `options` array must contain a `block` key with a block object that implemen
 
 ---
 
+## Asset Management
+
+AssetExtension prevents duplicate `<link>` and `<script>` tags when multiple templates or blocks request the same stylesheet or script within a single page render. Pure PHP, no XOOPS dependencies.
+
+### Queueing assets
+
+Register CSS and JS files from anywhere in your templates — blocks, module templates, theme includes. Duplicates are deduplicated by file path. If the same file is registered again with different attributes (e.g., different `media` or `defer`), the later registration wins.
+
+```smarty
+<{* In a block template *}>
+<{require_css file="modules/news/assets/news.css"}>
+<{require_js file="modules/news/assets/news.js" defer=true}>
+
+<{* In another block — same file, no duplicate emitted *}>
+<{require_css file="modules/news/assets/news.css"}>
+
+<{* External CDN assets *}>
+<{require_js file="https://cdn.example.com/lib.js" async=true}>
+
+<{* Print stylesheet *}>
+<{require_css file="modules/news/assets/print.css" media="print"}>
+```
+
+### Flushing assets in the theme
+
+Place these in your theme footer to output all queued tags at once:
+
+```smarty
+<{* In theme header — output all CSS *}>
+<{flush_css}>
+
+<{* In theme footer — output all JS *}>
+<{flush_js}>
+```
+
+After flushing, the queue is cleared. A second `flush_css` or `flush_js` call outputs nothing.
+
+### Custom rendering with assign
+
+Use `assign` to get the full metadata for custom rendering. The assigned value is a list of structured arrays, not just file paths:
+
+```smarty
+<{flush_css assign="styles"}>
+<{foreach $styles as $entry}>
+  <link rel="stylesheet" href="<{$entry.file|escape}>" media="<{$entry.media|escape}>">
+<{/foreach}>
+
+<{flush_js assign="scripts"}>
+<{foreach $scripts as $entry}>
+  <script src="<{$entry.file|escape}>"<{if $entry.defer}> defer<{/if}><{if $entry.async}> async<{/if}>></script>
+<{/foreach}>
+```
+
+### URL safety
+
+Asset URLs are validated against a safe-scheme allowlist. Only `http://`, `https://`, protocol-relative (`//cdn...`), and relative paths are accepted. Unsafe schemes like `javascript:` and `data:` are silently rejected, including entity-encoded variants. URLs with colons in query strings (e.g., `asset.php?src=https://cdn.example.com/lib.js`) are correctly allowed.
+
+---
+
 ## Ray Debugging
 
 RayDebugExtension sends template data to the [Ray](https://myray.app) desktop debugger. All functions silently no-op when Ray is not installed or the Debugbar RayLogger is disabled, so templates can safely contain Ray tags in production.
@@ -1058,3 +1121,5 @@ The `formatStatus()` example above intentionally returns `<span>` markup. This i
 | `has_user_permission` always returns false | `XoopsGroupPermHandler` was not injected | Pass the handler: `new SecurityExtension($security, $grouppermHandler)` |
 | Ray functions produce no output | Expected — they send data to the Ray desktop app, not the browser | Check that the Debugbar module is active, RayLogger is enabled, and the `ray()` helper function is installed. |
 | Modifier output shows raw HTML tags | `\|escape` was applied after an HTML-producing modifier | Remove `\|escape` from `nl2p`, `highlight_text`, `linkify`, and similar modifiers that return markup. |
+| `require_css` / `require_js` silently ignores a file | The URL contains an unsafe scheme (`data:`, `javascript:`) | Only `http://`, `https://`, protocol-relative (`//`), and relative paths are accepted. |
+| `flush_css` / `flush_js` outputs nothing | No assets were queued, or the queue was already flushed | Each flush clears the queue. Call `require_css`/`require_js` before flushing. |
