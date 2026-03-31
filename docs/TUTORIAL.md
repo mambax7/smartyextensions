@@ -19,7 +19,37 @@ This tutorial walks through practical usage of each extension in XOOPS templates
 
 ## Getting Started
 
-The extensions are registered automatically by the XOOPS bootstrap. Once loaded, all plugins are available in every `.tpl` template.
+### Registration
+
+Extensions must be registered with your Smarty instance before they can be used in templates. In a standalone setup, do this explicitly:
+
+```php
+use Xoops\SmartyExtensions\ExtensionRegistry;
+use Xoops\SmartyExtensions\Extension\TextExtension;
+use Xoops\SmartyExtensions\Extension\FormatExtension;
+use Xoops\SmartyExtensions\Extension\NavigationExtension;
+use Xoops\SmartyExtensions\Extension\DataExtension;
+use Xoops\SmartyExtensions\Extension\SecurityExtension;
+use Xoops\SmartyExtensions\Extension\FormExtension;
+use Xoops\SmartyExtensions\Extension\XoopsCoreExtension;
+use Xoops\SmartyExtensions\Extension\RayDebugExtension;
+
+$registry = new ExtensionRegistry();
+$registry->add(new TextExtension());
+$registry->add(new FormatExtension());
+$registry->add(new NavigationExtension());
+$registry->add(new DataExtension());
+$registry->add(new SecurityExtension($xoopsSecurity, $grouppermHandler));
+$registry->add(new FormExtension($xoopsSecurity));
+$registry->add(new XoopsCoreExtension());
+$registry->add(new RayDebugExtension());
+
+$registry->registerAll($smarty);
+```
+
+If XOOPS Core performs this registration in its bootstrap, all plugins will be available in every `.tpl` template without any additional setup in your module code.
+
+### Plugin types
 
 There are three types of Smarty plugins:
 
@@ -64,7 +94,9 @@ Use `truncate_words` to limit by word count:
 
 ### Converting newlines to paragraphs
 
-The `nl2p` modifier converts double newlines into `<p>` tags and single newlines into `<br>`:
+The `nl2p` modifier converts double newlines into `<p>` tags and single newlines into `<br>`.
+
+> **HTML output warning**: `nl2p` returns raw HTML markup. The input is not escaped, so pass only trusted or pre-sanitized content. Do not apply `|escape` after `nl2p` or the tags will be visible as text.
 
 ```smarty
 <{$userBio|nl2p}>
@@ -74,6 +106,8 @@ Input: `"First paragraph.\n\nSecond paragraph.\nWith a line break."`
 Output: `<p>First paragraph.</p><p>Second paragraph.<br>With a line break.</p>`
 
 ### Highlighting search terms
+
+> **HTML output warning**: `highlight_text` wraps matches in `<span>` tags and returns raw HTML. Ensure the source text is already escaped or trusted. Do not apply `|escape` after this modifier.
 
 ```smarty
 <{* Wrap matches in <span class="highlight"> *}>
@@ -229,11 +263,13 @@ NavigationExtension provides URL manipulation, breadcrumbs, pagination, and soci
 
 ### Canonical URLs
 
-Builds a full URL using `XOOPS_URL`:
+Builds a full URL by prepending `XOOPS_URL`. Returns an empty string if `XOOPS_URL` is not defined (it will not fall back to `HTTP_HOST` to prevent host-header poisoning). Always check the result before using it:
 
 ```smarty
 <{generate_canonical_url path="modules/news/article.php?id=42" assign="canonical"}>
-<link rel="canonical" href="<{$canonical}>">
+<{if $canonical}>
+  <link rel="canonical" href="<{$canonical}>">
+<{/if}>
 ```
 
 ### URL segments
@@ -263,6 +299,8 @@ Works with `youtube.com/watch?v=`, `youtu.be/`, `youtube.com/embed/`, and `youtu
 
 ### Making URLs clickable
 
+> **HTML output warning**: `linkify` returns raw HTML with `<a>` tags. The surrounding text is not escaped. Pass only trusted or pre-sanitized content to avoid XSS. Do not apply `|escape` after this modifier.
+
 ```smarty
 <{$comment.body|linkify}>
 ```
@@ -279,9 +317,13 @@ Input: `"https://example.com/page"` becomes `example.com/page`
 
 ### Parsing URLs
 
+Returns `false` for seriously malformed URLs. Always check before accessing components:
+
 ```smarty
 <{assign var="parts" value=$url|parse_url}>
-Host: <{$parts.host}>, Path: <{$parts.path}>
+<{if $parts}>
+  Host: <{$parts.host}>, Path: <{$parts.path}>
+<{/if}>
 ```
 
 ### Social sharing
@@ -302,6 +344,8 @@ Or get a link for a specific platform:
 Supported platforms: `twitter`, `facebook`, `linkedin`, `reddit`, `email`.
 
 ### Breadcrumbs
+
+> **HTML output note**: `render_breadcrumbs`, `render_pagination`, and `render_alert` all return Bootstrap 5 HTML markup. Do not apply `|escape` to their output. Their parameters are escaped internally.
 
 Renders Bootstrap 5 breadcrumb navigation:
 
@@ -390,6 +434,19 @@ Also works with JSON strings (decodes, then re-encodes with formatting).
 <{$htmlContent|strip_html_comments}>
 ```
 
+### Base64-encoding files
+
+Encode a file as a base64 string, for example to inline images in emails or data URIs. For security, this function only reads files under `XOOPS_ROOT_PATH` (or `DOCUMENT_ROOT` outside XOOPS). If neither is set, the function returns an empty string.
+
+```smarty
+<{base64_encode_file path=$imagePath assign="b64"}>
+<{if $b64}>
+  <img src="data:image/png;base64,<{$b64}>" alt="Inline image">
+<{/if}>
+```
+
+Paths that resolve outside the web root are silently rejected.
+
 ### CSV generation
 
 ```smarty
@@ -398,8 +455,13 @@ Also works with JSON strings (decodes, then re-encodes with formatting).
 
 ### Embedding PDFs
 
+Returns an empty string if `url` is empty.
+
 ```smarty
-<{embed_pdf url="/uploads/report.pdf" width="100%" height="600"}>
+<{embed_pdf url=$pdfUrl width="100%" height="600" assign="viewer"}>
+<{if $viewer}>
+  <{$viewer}>
+<{/if}>
 ```
 
 ### XML sitemap generation
@@ -425,8 +487,13 @@ Also works with JSON strings (decodes, then re-encodes with formatting).
 
 ### Session data
 
+Returns `null` (via `assign`) or an empty string (direct output) if the key does not exist.
+
 ```smarty
 <{get_session_data key="user_preference" assign="pref"}>
+<{if $pref}>
+  <p>Your preference: <{$pref|escape}></p>
+<{/if}>
 ```
 
 ### HTTP referrer
@@ -593,11 +660,17 @@ Use the `xo_permission` block to conditionally show content:
 
 ### Hashing
 
+For checksums, cache keys, and fingerprints. **Not for password storage** — use `password_hash()` in PHP for that.
+
 ```smarty
-<{$value|hash_string}>           <{* Default: SHA-256 *}>
-<{$value|hash_string:"md5"}>     <{* MD5 *}>
-<{$value|hash_string:"sha512"}>  <{* SHA-512 *}>
+<{* Default: SHA-256 (recommended for most uses) *}>
+<{$value|hash_string}>
+
+<{* SHA-512 for stronger fingerprints *}>
+<{$value|hash_string:"sha512"}>
 ```
+
+Any algorithm supported by PHP's `hash_algos()` can be used. Returns an empty string for unrecognized algorithms.
 
 ---
 
@@ -642,19 +715,25 @@ The returned array contains: `uid`, `uname`, `name`, `email`, `groups`, `is_admi
 
 ### Module URLs
 
+Builds a module-relative URL. When `XOOPS_URL` is defined, the output is a full URL; otherwise it starts with `/modules/`.
+
 ```smarty
-<{xo_module_url module="news" path="article.php" params=$queryParams}>
+<{xo_module_url module="news" path="article.php" params=$queryParams assign="articleUrl"}>
+<a href="<{$articleUrl}>">Read article</a>
 ```
 
-Output: `/modules/news/article.php?id=42`
+Example output with `XOOPS_URL` = `https://example.com`: `https://example.com/modules/news/article.php?id=42`
 
 ### User avatars
 
+Returns an empty string if no avatar can be resolved (no XOOPS avatar and no email for Gravatar). Check when using with `assign`:
+
 ```smarty
 <{* By user ID (looks up XOOPS avatar, falls back to Gravatar) *}>
-<{xo_avatar uid=$userId size=64 class="rounded-circle"}>
+<{xo_avatar uid=$userId size=64 class="rounded-circle" assign="avatar"}>
+<{if $avatar}><{$avatar}><{/if}>
 
-<{* By email (Gravatar only) *}>
+<{* By email (Gravatar only) — direct output *}>
 <{xo_avatar email=$userEmail size=48}>
 ```
 
@@ -685,6 +764,19 @@ Only renders when XOOPS debug mode is active:
 ```
 
 Renders as an expandable `<details>` element with a `<pre>` dump.
+
+### Rendering blocks
+
+Renders a XOOPS block from its options array. This is primarily used by theme templates and the block system; most module developers will not call it directly.
+
+```smarty
+<{xo_render_block options=$blockOptions assign="blockHtml"}>
+<{if $blockHtml}>
+  <div class="block-content"><{$blockHtml}></div>
+<{/if}>
+```
+
+The `options` array must contain a `block` key with a block object that implements a `getContent()` method (the standard XOOPS block interface).
 
 ### Module admin menu
 
